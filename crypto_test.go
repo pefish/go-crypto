@@ -9,3 +9,9 @@ func TestCryptoClass_Sha256ToHex(t *testing.T) {
 		t.Error()
 	}
 }
+
+func TestCryptoClass_ShiftCryptForInt(t *testing.T) {
+	if 79456702 != Crypto.ShiftCryptForInt(79456732, 70) {
+		t.Error()
+	}
+}

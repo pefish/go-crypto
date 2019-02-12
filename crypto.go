@@ -9,7 +9,6 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"gitee.com/pefish/p-go-format"
 	"gitee.com/pefish/p-go-reflect"
 )
 
@@ -41,18 +40,19 @@ func (this *CryptoClass) Md5ToHex(str string) string {
 */
 func (this *CryptoClass) ShiftCryptForInt(shiftCode int64, target int64) int64 {
 	shiftCodeStr := p_reflect.Reflect.ToString(shiftCode)
-	targetStr := p_format.Format.Int64ToString(target)
+	targetStr := p_reflect.Reflect.ToString(target)
 	length := len(shiftCodeStr)
 	targetLength := len(targetStr)
 	result := ``
 	for i := 0; i < length-targetLength; i++ {
 		result += string(shiftCodeStr[i])
 	}
-
+	resultLength := len(result)
 	for i := 0; i < targetLength; i++ {
-		result += p_format.Format.Int64ToString((p_format.Format.CharToInt64(targetStr[i]) + p_format.Format.CharToInt64(shiftCodeStr[i+targetLength])) % 10)
+		temp := (p_reflect.Reflect.ToInt64(targetStr[i]) + p_reflect.Reflect.ToInt64(shiftCodeStr[i+resultLength])) % 10
+		result += p_reflect.Reflect.ToString(temp)
 	}
-	return p_format.Format.StringToInt64(result)
+	return p_reflect.Reflect.ToInt64(result)
 }
 
 func (this *CryptoClass) PKCS5Padding(ciphertext []byte, blockSize int) []byte {
