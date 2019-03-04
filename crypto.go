@@ -9,7 +9,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"gitee.com/pefish/p-go-reflect"
+	"github.com/pefish/go-reflect"
 )
 
 type CryptoClass struct {
