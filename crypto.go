@@ -5,9 +5,13 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/md5"
+	"crypto/rand"
+	"crypto/rsa"
 	"crypto/sha256"
+	"crypto/x509"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/pem"
 	"fmt"
 	"github.com/pefish/go-reflect"
 )
@@ -97,4 +101,38 @@ func (this *CryptoClass) AesCbcDecrypt(key string, data string) string {
 	blockMode.CryptBlocks(origData, crypted)
 	origData = this.PKCS5UnPadding(origData)
 	return string(origData)
+}
+
+func (this *CryptoClass) GeneRsaKeyPair(params... int) (string, string) {
+	bits := 2048
+	if len(params) > 0 {
+		bits = params[0]
+	}
+	privateKey, err := rsa.GenerateKey(rand.Reader, bits)
+	derStream := x509.MarshalPKCS1PrivateKey(privateKey)
+	block := &pem.Block{
+		Type: "RSA PRIVATE KEY",
+		Bytes: derStream,
+	}
+	privBuffer := new(bytes.Buffer)
+	err = pem.Encode(privBuffer, block)
+	if err != nil {
+		panic(err)
+	}
+	// 生成公钥文件
+	publicKey := &privateKey.PublicKey
+	derPkix, err := x509.MarshalPKIXPublicKey(publicKey)
+	if err != nil {
+		panic(err)
+	}
+	block = &pem.Block{
+		Type: "PUBLIC KEY",
+		Bytes: derPkix,
+	}
+	pubBuffer := new(bytes.Buffer)
+	err = pem.Encode(pubBuffer, block)
+	if err != nil {
+		panic(err)
+	}
+	return privBuffer.String(), pubBuffer.String()
 }

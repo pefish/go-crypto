@@ -1,6 +1,7 @@
 package p_crypto
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -14,4 +15,8 @@ func TestCryptoClass_ShiftCryptForInt(t *testing.T) {
 	if 79456702 != Crypto.ShiftCryptForInt(79456732, 70) {
 		t.Error()
 	}
+}
+
+func TestCryptoClass_GeneRsaKeyPair(t *testing.T) {
+	fmt.Println(Crypto.GeneRsaKeyPair())
 }
