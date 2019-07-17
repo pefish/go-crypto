@@ -14,6 +14,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	"github.com/pefish/go-reflect"
+	"github.com/pefish/go-string"
 )
 
 type CryptoClass struct {
@@ -73,6 +74,17 @@ func (this *CryptoClass) PKCS5UnPadding(origData []byte) []byte {
 
 // aes加密，填充秘钥key的16位，24,32分别对应AES-128, AES-192, or AES-256.
 func (this *CryptoClass) AesCbcEncrypt(key string, data string) string {
+	length := len(key)
+	if length <= 16 {
+		key = p_string.String.SpanLeft(key, 16, `0`)
+	} else if length <= 24 {
+		key = p_string.String.SpanLeft(key, 24, `0`)
+	} else if length <= 32 {
+		key = p_string.String.SpanLeft(key, 32, `0`)
+	} else {
+		panic(`length of secret key error`)
+	}
+
 	keyBytes := []byte(key)
 	block, err := aes.NewCipher(keyBytes)
 	if err != nil {
@@ -87,6 +99,17 @@ func (this *CryptoClass) AesCbcEncrypt(key string, data string) string {
 }
 
 func (this *CryptoClass) AesCbcDecrypt(key string, data string) string {
+	length := len(key)
+	if length <= 16 {
+		key = p_string.String.SpanLeft(key, 16, `0`)
+	} else if length <= 24 {
+		key = p_string.String.SpanLeft(key, 24, `0`)
+	} else if length <= 32 {
+		key = p_string.String.SpanLeft(key, 32, `0`)
+	} else {
+		panic(`length of secret key error`)
+	}
+
 	block, err := aes.NewCipher([]byte(key))
 	if err != nil {
 		panic(err)

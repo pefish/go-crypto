@@ -20,3 +20,15 @@ func TestCryptoClass_ShiftCryptForInt(t *testing.T) {
 func TestCryptoClass_GeneRsaKeyPair(t *testing.T) {
 	fmt.Println(Crypto.GeneRsaKeyPair())
 }
+
+func TestCryptoClass_AesCbcEncrypt(t *testing.T) {
+	if `bj7P4lrG3TyB8KBpCDyGqQ==` != Crypto.AesCbcEncrypt(`1234567890123456`, `haha`) {
+		t.Error()
+	}
+}
+
+func TestCryptoClass_AesCbcDecrypt(t *testing.T) {
+	if `haha` != Crypto.AesCbcDecrypt(`1234567890123456`, `bj7P4lrG3TyB8KBpCDyGqQ==`) {
+		t.Error()
+	}
+}
