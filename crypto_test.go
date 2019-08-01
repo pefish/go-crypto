@@ -1,4 +1,4 @@
-package p_crypto
+package go_crypto
 
 import (
 	"fmt"
@@ -30,5 +30,33 @@ func TestCryptoClass_AesCbcEncrypt(t *testing.T) {
 func TestCryptoClass_AesCbcDecrypt(t *testing.T) {
 	if `haha` != Crypto.AesCbcDecrypt(`1234567890123456`, `bj7P4lrG3TyB8KBpCDyGqQ==`) {
 		t.Error()
+	}
+}
+
+func TestCryptoClass_HmacSha256ToHex(t *testing.T) {
+	type args struct {
+		str    string
+		secret string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: `test`,
+			args: args{
+				str:    `625422`,
+				secret: `test`,
+			},
+			want: `9cb8d8c168d20c0bd03782acbda3dfa504fcac3be2b80176134b89f54e376dd5`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := Crypto.HmacSha256ToHex(tt.args.str, tt.args.secret); got != tt.want {
+				t.Errorf("CryptoClass.HmacSha256ToHex() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }

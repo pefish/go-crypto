@@ -1,9 +1,10 @@
-package p_crypto
+package go_crypto
 
 import (
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/hmac"
 	"crypto/md5"
 	"crypto/rand"
 	"crypto/rsa"
@@ -15,6 +16,7 @@ import (
 	"fmt"
 	"github.com/pefish/go-reflect"
 	"github.com/pefish/go-string"
+	"io"
 )
 
 type CryptoClass struct {
@@ -25,6 +27,15 @@ var Crypto = CryptoClass{}
 func (this *CryptoClass) Sha256ToHex(str string) string {
 	h := sha256.New()
 	h.Write([]byte(str))
+	return hex.EncodeToString(h.Sum(nil))
+}
+
+func (this *CryptoClass) HmacSha256ToHex(str string, secret string) string {
+	h := hmac.New(sha256.New, []byte(secret))
+	_, err := io.WriteString(h, str)
+	if err != nil {
+		panic(err)
+	}
 	return hex.EncodeToString(h.Sum(nil))
 }
 
@@ -44,8 +55,8 @@ func (this *CryptoClass) Md5ToHex(str string) string {
 移位加密
 */
 func (this *CryptoClass) ShiftCryptForInt(shiftCode int64, target int64) int64 {
-	shiftCodeStr := p_reflect.Reflect.ToString(shiftCode)
-	targetStr := p_reflect.Reflect.ToString(target)
+	shiftCodeStr := go_reflect.Reflect.ToString(shiftCode)
+	targetStr := go_reflect.Reflect.ToString(target)
 	length := len(shiftCodeStr)
 	targetLength := len(targetStr)
 	result := ``
@@ -54,10 +65,10 @@ func (this *CryptoClass) ShiftCryptForInt(shiftCode int64, target int64) int64 {
 	}
 	resultLength := len(result)
 	for i := 0; i < targetLength; i++ {
-		temp := (p_reflect.Reflect.ToInt64(targetStr[i]) + p_reflect.Reflect.ToInt64(shiftCodeStr[i+resultLength])) % 10
-		result += p_reflect.Reflect.ToString(temp)
+		temp := (go_reflect.Reflect.ToInt64(targetStr[i]) + go_reflect.Reflect.ToInt64(shiftCodeStr[i+resultLength])) % 10
+		result += go_reflect.Reflect.ToString(temp)
 	}
-	return p_reflect.Reflect.ToInt64(result)
+	return go_reflect.Reflect.ToInt64(result)
 }
 
 func (this *CryptoClass) PKCS5Padding(ciphertext []byte, blockSize int) []byte {
@@ -76,11 +87,11 @@ func (this *CryptoClass) PKCS5UnPadding(origData []byte) []byte {
 func (this *CryptoClass) AesCbcEncrypt(key string, data string) string {
 	length := len(key)
 	if length <= 16 {
-		key = p_string.String.SpanLeft(key, 16, `0`)
+		key = go_string.String.SpanLeft(key, 16, `0`)
 	} else if length <= 24 {
-		key = p_string.String.SpanLeft(key, 24, `0`)
+		key = go_string.String.SpanLeft(key, 24, `0`)
 	} else if length <= 32 {
-		key = p_string.String.SpanLeft(key, 32, `0`)
+		key = go_string.String.SpanLeft(key, 32, `0`)
 	} else {
 		panic(`length of secret key error`)
 	}
@@ -101,11 +112,11 @@ func (this *CryptoClass) AesCbcEncrypt(key string, data string) string {
 func (this *CryptoClass) AesCbcDecrypt(key string, data string) string {
 	length := len(key)
 	if length <= 16 {
-		key = p_string.String.SpanLeft(key, 16, `0`)
+		key = go_string.String.SpanLeft(key, 16, `0`)
 	} else if length <= 24 {
-		key = p_string.String.SpanLeft(key, 24, `0`)
+		key = go_string.String.SpanLeft(key, 24, `0`)
 	} else if length <= 32 {
-		key = p_string.String.SpanLeft(key, 32, `0`)
+		key = go_string.String.SpanLeft(key, 32, `0`)
 	} else {
 		panic(`length of secret key error`)
 	}
