@@ -55,8 +55,8 @@ func (this *CryptoClass) Md5ToHex(str string) string {
 移位加密
 */
 func (this *CryptoClass) ShiftCryptForInt(shiftCode int64, target int64) int64 {
-	shiftCodeStr := go_reflect.Reflect.ToString(shiftCode)
-	targetStr := go_reflect.Reflect.ToString(target)
+	shiftCodeStr := go_reflect.Reflect.MustToString(shiftCode)
+	targetStr := go_reflect.Reflect.MustToString(target)
 	length := len(shiftCodeStr)
 	targetLength := len(targetStr)
 	result := ``
@@ -65,10 +65,10 @@ func (this *CryptoClass) ShiftCryptForInt(shiftCode int64, target int64) int64 {
 	}
 	resultLength := len(result)
 	for i := 0; i < targetLength; i++ {
-		temp := (go_reflect.Reflect.ToInt64(targetStr[i]) + go_reflect.Reflect.ToInt64(shiftCodeStr[i+resultLength])) % 10
-		result += go_reflect.Reflect.ToString(temp)
+		temp := (go_reflect.Reflect.MustToInt64(string(targetStr[i])) + go_reflect.Reflect.MustToInt64(string(shiftCodeStr[i+resultLength]))) % 10
+		result += go_reflect.Reflect.MustToString(temp)
 	}
-	return go_reflect.Reflect.ToInt64(result)
+	return go_reflect.Reflect.MustToInt64(result)
 }
 
 func (this *CryptoClass) PKCS5Padding(ciphertext []byte, blockSize int) []byte {
