@@ -1,7 +1,8 @@
 module github.com/pefish/go-crypto
 
 require (
-	github.com/libp2p/go-libp2p-crypto v0.0.2
 	github.com/pefish/go-reflect v0.1.1
-	github.com/pefish/go-string v0.1.0
+	golang.org/x/crypto v0.0.0-20200117160349-530e935923ad
 )
+
+go 1.13

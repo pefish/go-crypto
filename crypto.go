@@ -13,10 +13,11 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"github.com/pefish/go-reflect"
-	"github.com/pefish/go-string"
 	"io"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type CryptoClass struct {
@@ -30,7 +31,7 @@ func (this *CryptoClass) Sha256ToHex(str string) string {
 	return hex.EncodeToString(h.Sum(nil))
 }
 
-func (this *CryptoClass) HmacSha256ToHex(str string, secret string) string {
+func (this *CryptoClass) MustHmacSha256ToHex(str string, secret string) string {
 	h := hmac.New(sha256.New, []byte(secret))
 	_, err := io.WriteString(h, str)
 	if err != nil {
@@ -84,14 +85,14 @@ func (this *CryptoClass) PKCS5UnPadding(origData []byte) []byte {
 }
 
 // aes加密，填充秘钥key的16位，24,32分别对应AES-128, AES-192, or AES-256.
-func (this *CryptoClass) AesCbcEncrypt(key string, data string) string {
+func (this *CryptoClass) MustAesCbcEncrypt(key string, data string) string {
 	length := len(key)
 	if length <= 16 {
-		key = go_string.String.SpanLeft(key, 16, `0`)
+		key = this.mustSpanLeft(key, 16, `0`)
 	} else if length <= 24 {
-		key = go_string.String.SpanLeft(key, 24, `0`)
+		key = this.mustSpanLeft(key, 24, `0`)
 	} else if length <= 32 {
-		key = go_string.String.SpanLeft(key, 32, `0`)
+		key = this.mustSpanLeft(key, 32, `0`)
 	} else {
 		panic(`length of secret key error`)
 	}
@@ -109,14 +110,14 @@ func (this *CryptoClass) AesCbcEncrypt(key string, data string) string {
 	return base64.StdEncoding.EncodeToString(crypted)
 }
 
-func (this *CryptoClass) AesCbcDecrypt(key string, data string) string {
+func (this *CryptoClass) MustAesCbcDecrypt(key string, data string) string {
 	length := len(key)
 	if length <= 16 {
-		key = go_string.String.SpanLeft(key, 16, `0`)
+		key = this.mustSpanLeft(key, 16, `0`)
 	} else if length <= 24 {
-		key = go_string.String.SpanLeft(key, 24, `0`)
+		key = this.mustSpanLeft(key, 24, `0`)
 	} else if length <= 32 {
-		key = go_string.String.SpanLeft(key, 32, `0`)
+		key = this.mustSpanLeft(key, 32, `0`)
 	} else {
 		panic(`length of secret key error`)
 	}
@@ -137,7 +138,7 @@ func (this *CryptoClass) AesCbcDecrypt(key string, data string) string {
 	return string(origData)
 }
 
-func (this *CryptoClass) GeneRsaKeyPair(params... int) (string, string) {
+func (this *CryptoClass) MustGeneRsaKeyPair(params... int) (string, string) {
 	bits := 2048
 	if len(params) > 0 {
 		bits = params[0]
@@ -169,4 +170,37 @@ func (this *CryptoClass) GeneRsaKeyPair(params... int) (string, string) {
 		panic(err)
 	}
 	return privBuffer.String(), pubBuffer.String()
+}
+
+func (this *CryptoClass) mustSpanLeft(str string, length int, fillChar string) string {
+	if len(str) > length {
+		panic(errors.New(`length is too small`))
+	}
+	if len(fillChar) != 1 {
+		panic(errors.New(`length of fillChar must be 1`))
+	}
+	result := ``
+	for i := 0; i < length-len(str); i++ {
+		result += fillChar
+	}
+	return result + str
+}
+
+func (this *CryptoClass) MustBcryptToDbPass(passwdInput string) string {
+	hashPasswdInput := md5.New()
+	hashPasswdInput.Write([]byte(passwdInput))
+	passwdBcryptBytes, err := bcrypt.GenerateFromPassword([]byte(fmt.Sprintf("%x", hashPasswdInput.Sum(nil))), bcrypt.MinCost)
+	if err != nil {
+		panic(err)
+	}
+
+	return string(passwdBcryptBytes)
+}
+
+func (this *CryptoClass) VerifyBcryptDbPass(passwdInput string, passwdInDb string) bool {
+	hs := md5.New()
+	hs.Write([]byte(passwdInput))
+
+	err := bcrypt.CompareHashAndPassword([]byte(passwdInDb), []byte(fmt.Sprintf("%x", hs.Sum(nil))))
+	return err == nil
 }
