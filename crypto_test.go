@@ -18,17 +18,17 @@ func TestCryptoClass_ShiftCryptForInt(t *testing.T) {
 }
 
 func TestCryptoClass_GeneRsaKeyPair(t *testing.T) {
-	fmt.Println(Crypto.GeneRsaKeyPair())
+	fmt.Println(Crypto.MustGeneRsaKeyPair())
 }
 
 func TestCryptoClass_AesCbcEncrypt(t *testing.T) {
-	if `bj7P4lrG3TyB8KBpCDyGqQ==` != Crypto.AesCbcEncrypt(`1234567890123456`, `haha`) {
+	if `bj7P4lrG3TyB8KBpCDyGqQ==` != Crypto.MustAesCbcEncrypt(`1234567890123456`, `haha`) {
 		t.Error()
 	}
 }
 
 func TestCryptoClass_AesCbcDecrypt(t *testing.T) {
-	if `haha` != Crypto.AesCbcDecrypt(`1234567890123456`, `bj7P4lrG3TyB8KBpCDyGqQ==`) {
+	if `haha` != Crypto.MustAesCbcDecrypt(`1234567890123456`, `bj7P4lrG3TyB8KBpCDyGqQ==`) {
 		t.Error()
 	}
 }
@@ -54,7 +54,7 @@ func TestCryptoClass_HmacSha256ToHex(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := Crypto.HmacSha256ToHex(tt.args.str, tt.args.secret); got != tt.want {
+			if got := Crypto.MustHmacSha256ToHex(tt.args.str, tt.args.secret); got != tt.want {
 				t.Errorf("CryptoClass.HmacSha256ToHex() = %v, want %v", got, tt.want)
 			}
 		})

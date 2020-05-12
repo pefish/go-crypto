@@ -1,5 +1,7 @@
 github.com/pefish/go-reflect v0.1.1 h1:ga1xuOwahhGbu5qwoYNeiaTFhYr60Epmxp74YGMpfPk=
 github.com/pefish/go-reflect v0.1.1/go.mod h1:lv3gz/Zh2FsqCq8jqzdCgYpoM41AjE90HtknRbkXhjQ=
+github.com/pefish/go-reflect v0.2.0 h1:EUB7sDyRdAHkB8SxZcsLgkDgS1X/5yUrNFhNwSbPfBE=
+github.com/pefish/go-reflect v0.2.0/go.mod h1:KTxD5dhPvgUFiL+v2cxvYH/u4qEf7MPI+RouiiMNnRk=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/crypto v0.0.0-20200117160349-530e935923ad h1:Jh8cai0fqIK+f6nG0UgPW5wFk8wmiMhM3AyciDBdtQg=
 golang.org/x/crypto v0.0.0-20200117160349-530e935923ad/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
