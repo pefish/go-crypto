@@ -7,13 +7,14 @@ import (
 	"crypto/hmac"
 	"crypto/md5"
 	"crypto/rand"
+	"crypto/rc4"
 	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/pem"
-	"errors"
+	"github.com/pkg/errors"
 	"fmt"
 	"github.com/pefish/go-reflect"
 	"golang.org/x/crypto/bcrypt"
@@ -203,4 +204,41 @@ func (cryptoInstance *CryptoClass) VerifyBcryptDbPass(passwdInput string, passwd
 
 	err := bcrypt.CompareHashAndPassword([]byte(passwdInDb), []byte(fmt.Sprintf("%x", hs.Sum(nil))))
 	return err == nil
+}
+
+func (cryptoInstance *CryptoClass) EncryptRc4(input string, pass string) (string, error) {
+	if len(input) <= 0 {
+		return "", errors.New("input string error")
+	}
+	if len(pass) <= 0 {
+		return "", errors.New("pass string error")
+	}
+	c, err := rc4.NewCipher([]byte(pass))
+	if err != nil {
+		return "", err
+	}
+	src := []byte(input)
+	dst := make([]byte, len(src))
+	c.XORKeyStream(dst, src)
+	return hex.EncodeToString(dst), nil
+}
+
+func (cryptoInstance *CryptoClass) DecryptRc4(input string, pass string) (string, error) {
+	if len(input) <= 0 {
+		return "", errors.New("input string error")
+	}
+	if len(pass) <= 0 {
+		return "", errors.New("pass string error")
+	}
+	c, err := rc4.NewCipher([]byte(pass))
+	if err != nil {
+		return "", err
+	}
+	inputBytes, err := hex.DecodeString(input)
+	if err != nil {
+		return "", err
+	}
+	dst := make([]byte, len(inputBytes))
+	c.XORKeyStream(dst, inputBytes)
+	return string(dst), nil
 }

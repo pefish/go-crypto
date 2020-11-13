@@ -1,36 +1,31 @@
 package go_crypto
 
 import (
-	"fmt"
+	"github.com/pefish/go-test-assert"
+	"strings"
 	"testing"
 )
 
 func TestCryptoClass_Sha256ToHex(t *testing.T) {
-	if Crypto.Sha256ToHex(`12123`) != `c492e2a3e4f6cc9c5b3a1ae173333905d4cf6407f1c3b87c50763bbbbadc0dd9` {
-		t.Error()
-	}
+	test.Equal(t, "c492e2a3e4f6cc9c5b3a1ae173333905d4cf6407f1c3b87c50763bbbbadc0dd9", Crypto.Sha256ToHex(`12123`))
 }
 
 func TestCryptoClass_ShiftCryptForInt(t *testing.T) {
-	if 79456702 != Crypto.ShiftCryptForInt(79456732, 70) {
-		t.Error()
-	}
+	test.Equal(t, int64(79456702), Crypto.ShiftCryptForInt(79456732, 70))
 }
 
 func TestCryptoClass_GeneRsaKeyPair(t *testing.T) {
-	fmt.Println(Crypto.MustGeneRsaKeyPair())
+	priv, pubk := Crypto.MustGeneRsaKeyPair()
+	test.Equal(t, true, strings.HasPrefix(priv, "-----BEGIN RSA PRIVATE KEY-----"))
+	test.Equal(t, true, strings.HasPrefix(pubk, "-----BEGIN PUBLIC KEY-----"))
 }
 
 func TestCryptoClass_AesCbcEncrypt(t *testing.T) {
-	if `bj7P4lrG3TyB8KBpCDyGqQ==` != Crypto.MustAesCbcEncrypt(`1234567890123456`, `haha`) {
-		t.Error()
-	}
+	test.Equal(t, "bj7P4lrG3TyB8KBpCDyGqQ==", Crypto.MustAesCbcEncrypt(`1234567890123456`, `haha`))
 }
 
 func TestCryptoClass_AesCbcDecrypt(t *testing.T) {
-	if `haha` != Crypto.MustAesCbcDecrypt(`1234567890123456`, `bj7P4lrG3TyB8KBpCDyGqQ==`) {
-		t.Error()
-	}
+	test.Equal(t, "haha", Crypto.MustAesCbcDecrypt(`1234567890123456`, `bj7P4lrG3TyB8KBpCDyGqQ==`))
 }
 
 func TestCryptoClass_HmacSha256ToHex(t *testing.T) {
@@ -59,4 +54,16 @@ func TestCryptoClass_HmacSha256ToHex(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestCryptoClass_EncryptRc4(t *testing.T) {
+	result, err := Crypto.EncryptRc4("gFkFZafUbcO/4Lg5bxhpUGQECZHPfGzX4t8pKcT7+3s=", "dhshrsyhwrthwyrhwgnwyt")
+	test.Equal(t, nil, err)
+	test.Equal(t, "316ca67cf2ccf6d5feb976176c016ee23adca4ee5506e712b49cd293d55766759c4f4175e9246c58a952de95", result)
+}
+
+func TestCryptoClass_DecryptRc4(t *testing.T) {
+	result, err := Crypto.DecryptRc4("316ca67cf2ccf6d5feb976176c016ee23adca4ee5506e712b49cd293d55766759c4f4175e9246c58a952de95", "dhshrsyhwrthwyrhwgnwyt")
+	test.Equal(t, nil, err)
+	test.Equal(t, "gFkFZafUbcO/4Lg5bxhpUGQECZHPfGzX4t8pKcT7+3s=", result)
 }
