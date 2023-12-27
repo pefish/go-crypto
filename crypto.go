@@ -14,51 +14,64 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/pem"
-	"github.com/pkg/errors"
 	"fmt"
-	"github.com/pefish/go-reflect"
+	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 	"io"
+	"strconv"
 )
 
-type CryptoClass struct {
+type CryptoType struct {
 }
 
-var Crypto = CryptoClass{}
+var CryptoInstance = NewCryptoInstance()
 
-func (cryptoInstance *CryptoClass) Sha256ToHex(str string) string {
+func NewCryptoInstance() *CryptoType {
+	return &CryptoType{}
+}
+
+func (ct *CryptoType) Sha256ToHex(str string) string {
 	h := sha256.New()
 	h.Write([]byte(str))
 	return hex.EncodeToString(h.Sum(nil))
 }
 
-func (cryptoInstance *CryptoClass) MustHmacSha256ToHex(str string, secret string) string {
-	h := hmac.New(sha256.New, []byte(secret))
-	_, err := io.WriteString(h, str)
+func (ct *CryptoType) MustHmacSha256ToHex(str string, secret string) string {
+	result, err := ct.HmacSha256ToHex(str, secret)
 	if err != nil {
 		panic(err)
 	}
-	return hex.EncodeToString(h.Sum(nil))
+	return result
 }
 
-func (cryptoInstance *CryptoClass) Sha256ToBytes(str string) []byte {
+func (ct *CryptoType) HmacSha256ToHex(str string, secret string) (string, error) {
+	h := hmac.New(sha256.New, []byte(secret))
+	_, err := io.WriteString(h, str)
+	if err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(h.Sum(nil)), nil
+}
+
+func (ct *CryptoType) Sha256ToBytes(str string) []byte {
 	h := sha256.New()
 	h.Write([]byte(str))
 	return h.Sum(nil)
 }
 
-func (cryptoInstance *CryptoClass) Md5ToHex(str string) string {
+func (ct *CryptoType) Md5ToHex(str string) string {
 	data := []byte(str)
 	has := md5.Sum(data)
 	return fmt.Sprintf("%x", has)
 }
 
-/**
+/*
+*
 移位加密
 */
-func (cryptoInstance *CryptoClass) ShiftCryptForInt(shiftCode int64, target int64) int64 {
-	shiftCodeStr := go_reflect.Reflect.ToString(shiftCode)
-	targetStr := go_reflect.Reflect.ToString(target)
+func (ct *CryptoType) ShiftCryptForInt(shiftCode int64, target int64) (int64, error) {
+	shiftCodeStr := strconv.FormatInt(shiftCode, 10)
+	targetStr := strconv.FormatInt(target, 10)
 	length := len(shiftCodeStr)
 	targetLength := len(targetStr)
 	result := ``
@@ -67,79 +80,118 @@ func (cryptoInstance *CryptoClass) ShiftCryptForInt(shiftCode int64, target int6
 	}
 	resultLength := len(result)
 	for i := 0; i < targetLength; i++ {
-		temp := (go_reflect.Reflect.MustToInt64(string(targetStr[i])) + go_reflect.Reflect.MustToInt64(string(shiftCodeStr[i+resultLength]))) % 10
-		result += go_reflect.Reflect.ToString(temp)
+		targetIInt, err := strconv.ParseInt(string(targetStr[i]), 10, 64)
+		if err != nil {
+			return 0, err
+		}
+		shiftCodeIInt, err := strconv.ParseInt(string(shiftCodeStr[i+resultLength]), 10, 64)
+		if err != nil {
+			return 0, err
+		}
+		result += strconv.FormatInt((targetIInt+shiftCodeIInt)%10, 10)
 	}
-	return go_reflect.Reflect.MustToInt64(result)
+	resultInt, err := strconv.ParseInt(result, 10, 64)
+	if err != nil {
+		return 0, err
+	}
+	return resultInt, nil
 }
 
-func (cryptoInstance *CryptoClass) PKCS5Padding(ciphertext []byte, blockSize int) []byte {
+func (ct *CryptoType) PKCS5Padding(ciphertext []byte, blockSize int) []byte {
 	padding := blockSize - len(ciphertext)%blockSize
 	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
 	return append(ciphertext, padtext...)
 }
 
-func (cryptoInstance *CryptoClass) PKCS5UnPadding(origData []byte) []byte {
+func (ct *CryptoType) PKCS5UnPadding(origData []byte) []byte {
 	length := len(origData)
 	unpadding := int(origData[length-1])
 	return origData[:(length - unpadding)]
 }
 
-// aes加密，填充秘钥key的16位，24,32分别对应AES-128, AES-192, or AES-256.
-func (cryptoInstance *CryptoClass) MustAesCbcEncrypt(key string, data string) string {
-	length := len(key)
-	if length <= 16 {
-		key = cryptoInstance.mustSpanLeft(key, 16, `0`)
-	} else if length <= 24 {
-		key = cryptoInstance.mustSpanLeft(key, 24, `0`)
-	} else if length <= 32 {
-		key = cryptoInstance.mustSpanLeft(key, 32, `0`)
-	} else {
-		panic(`length of secret key error`)
-	}
-
-	keyBytes := []byte(key)
-	block, err := aes.NewCipher(keyBytes)
+func (ct *CryptoType) MustAesCbcEncrypt(key string, data string) string {
+	result, err := ct.AesCbcEncrypt(key, data)
 	if err != nil {
 		panic(err)
 	}
+	return result
+}
+
+// aes加密，填充秘钥key的16位，24,32分别对应AES-128, AES-192, or AES-256.
+func (ct *CryptoType) AesCbcEncrypt(key string, data string) (string, error) {
+	length := len(key)
+	newKey := key
+	var err error
+	if length <= 16 {
+		newKey, err = ct.SpanLeft(key, 16, `0`)
+	} else if length <= 24 {
+		newKey, err = ct.SpanLeft(key, 24, `0`)
+	} else if length <= 32 {
+		newKey, err = ct.SpanLeft(key, 32, `0`)
+	} else {
+		return "", errors.New(`Length of secret key error.`)
+	}
+
+	keyBytes := []byte(newKey)
+	block, err := aes.NewCipher(keyBytes)
+	if err != nil {
+		return "", err
+	}
 	blockSize := block.BlockSize()
-	origData := cryptoInstance.PKCS5Padding([]byte(data), blockSize)
+	origData := ct.PKCS5Padding([]byte(data), blockSize)
 	blockMode := cipher.NewCBCEncrypter(block, make([]byte, blockSize)) // 使用``作为iv
 	crypted := make([]byte, len(origData))
 	blockMode.CryptBlocks(crypted, origData)
-	return base64.StdEncoding.EncodeToString(crypted)
+	return base64.StdEncoding.EncodeToString(crypted), nil
 }
 
-func (cryptoInstance *CryptoClass) MustAesCbcDecrypt(key string, data string) string {
-	length := len(key)
-	if length <= 16 {
-		key = cryptoInstance.mustSpanLeft(key, 16, `0`)
-	} else if length <= 24 {
-		key = cryptoInstance.mustSpanLeft(key, 24, `0`)
-	} else if length <= 32 {
-		key = cryptoInstance.mustSpanLeft(key, 32, `0`)
-	} else {
-		panic(`length of secret key error`)
-	}
-
-	block, err := aes.NewCipher([]byte(key))
+func (ct *CryptoType) MustAesCbcDecrypt(key string, data string) string {
+	result, err := ct.AesCbcDecrypt(key, data)
 	if err != nil {
 		panic(err)
+	}
+	return result
+}
+
+func (ct *CryptoType) AesCbcDecrypt(key string, data string) (string, error) {
+	length := len(key)
+	newKey := key
+	var err error
+	if length <= 16 {
+		newKey, err = ct.SpanLeft(key, 16, `0`)
+	} else if length <= 24 {
+		newKey, err = ct.SpanLeft(key, 24, `0`)
+	} else if length <= 32 {
+		newKey, err = ct.SpanLeft(key, 32, `0`)
+	} else {
+		return "", errors.New(`Length of secret key error.`)
+	}
+
+	block, err := aes.NewCipher([]byte(newKey))
+	if err != nil {
+		return "", err
 	}
 	blockSize := block.BlockSize()
 	blockMode := cipher.NewCBCDecrypter(block, make([]byte, blockSize))
 	crypted, err := base64.StdEncoding.DecodeString(data)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 	origData := make([]byte, len(crypted))
 	blockMode.CryptBlocks(origData, crypted)
-	origData = cryptoInstance.PKCS5UnPadding(origData)
-	return string(origData)
+	origData = ct.PKCS5UnPadding(origData)
+	return string(origData), nil
 }
 
-func (cryptoInstance *CryptoClass) MustGeneRsaKeyPair(params ...int) (string, string) {
+func (ct *CryptoType) MustGeneRsaKeyPair(params ...int) (priv string, pub string) {
+	result1, result2, err := ct.GeneRsaKeyPair(params...)
+	if err != nil {
+		panic(err)
+	}
+	return result1, result2
+}
+
+func (ct *CryptoType) GeneRsaKeyPair(params ...int) (priv string, pub string, err error) {
 	bits := 2048
 	if len(params) > 0 {
 		bits = params[0]
@@ -153,13 +205,13 @@ func (cryptoInstance *CryptoClass) MustGeneRsaKeyPair(params ...int) (string, st
 	privBuffer := new(bytes.Buffer)
 	err = pem.Encode(privBuffer, block)
 	if err != nil {
-		panic(err)
+		return "", "", err
 	}
 	// 生成公钥文件
 	publicKey := &privateKey.PublicKey
 	derPkix, err := x509.MarshalPKIXPublicKey(publicKey)
 	if err != nil {
-		panic(err)
+		return "", "", err
 	}
 	block = &pem.Block{
 		Type:  "PUBLIC KEY",
@@ -168,45 +220,64 @@ func (cryptoInstance *CryptoClass) MustGeneRsaKeyPair(params ...int) (string, st
 	pubBuffer := new(bytes.Buffer)
 	err = pem.Encode(pubBuffer, block)
 	if err != nil {
-		panic(err)
+		return "", "", err
 	}
-	return privBuffer.String(), pubBuffer.String()
+	return privBuffer.String(), pubBuffer.String(), nil
 }
 
-func (cryptoInstance *CryptoClass) mustSpanLeft(str string, length int, fillChar string) string {
+func (ct *CryptoType) MustSpanLeft(str string, length int, fillChar string) string {
+	result, err := ct.SpanLeft(str, length, fillChar)
+	if err != nil {
+		panic(err)
+	}
+	return result
+}
+
+func (ct *CryptoType) SpanLeft(str string, length int, fillChar string) (string, error) {
 	if len(str) > length {
-		panic(errors.New(`length is too small`))
+		return "", errors.New(`Length is too small.`)
 	}
 	if len(fillChar) != 1 {
-		panic(errors.New(`length of fillChar must be 1`))
+		return "", errors.New(`Length of fillChar must be 1.`)
 	}
 	result := ``
 	for i := 0; i < length-len(str); i++ {
 		result += fillChar
 	}
-	return result + str
+	return result + str, nil
 }
 
-func (cryptoInstance *CryptoClass) MustBcryptToDbPass(passwdInput string) string {
+func (ct *CryptoType) MustBcryptToDbPass(passwdInput string) string {
+	result, err := ct.BcryptToDbPass(passwdInput)
+	if err != nil {
+		panic(err)
+	}
+	return result
+}
+
+func (ct *CryptoType) BcryptToDbPass(passwdInput string) (string, error) {
 	hashPasswdInput := md5.New()
 	hashPasswdInput.Write([]byte(passwdInput))
 	passwdBcryptBytes, err := bcrypt.GenerateFromPassword([]byte(fmt.Sprintf("%x", hashPasswdInput.Sum(nil))), bcrypt.MinCost)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
-	return string(passwdBcryptBytes)
+	return string(passwdBcryptBytes), nil
 }
 
-func (cryptoInstance *CryptoClass) VerifyBcryptDbPass(passwdInput string, passwdInDb string) bool {
+func (ct *CryptoType) VerifyBcryptDbPass(passwdInput string, passwdInDb string) bool {
 	hs := md5.New()
 	hs.Write([]byte(passwdInput))
 
-	err := bcrypt.CompareHashAndPassword([]byte(passwdInDb), []byte(fmt.Sprintf("%x", hs.Sum(nil))))
+	err := bcrypt.CompareHashAndPassword(
+		[]byte(passwdInDb),
+		[]byte(fmt.Sprintf("%x", hs.Sum(nil))),
+	)
 	return err == nil
 }
 
-func (cryptoInstance *CryptoClass) EncryptRc4(input string, pass string) (string, error) {
+func (ct *CryptoType) EncryptRc4(input string, pass string) (string, error) {
 	if len(input) <= 0 {
 		return "", errors.New("input string error")
 	}
@@ -223,7 +294,7 @@ func (cryptoInstance *CryptoClass) EncryptRc4(input string, pass string) (string
 	return hex.EncodeToString(dst), nil
 }
 
-func (cryptoInstance *CryptoClass) DecryptRc4(input string, pass string) (string, error) {
+func (ct *CryptoType) DecryptRc4(input string, pass string) (string, error) {
 	if len(input) <= 0 {
 		return "", errors.New("input string error")
 	}
