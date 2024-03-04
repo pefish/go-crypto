@@ -15,18 +15,19 @@ import (
 	"encoding/hex"
 	"encoding/pem"
 	"fmt"
-	"github.com/pkg/errors"
-	"golang.org/x/crypto/bcrypt"
 	"io"
 	"strconv"
+
+	"github.com/pkg/errors"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type CryptoType struct {
 }
 
-var CryptoInstance = NewCryptoInstance()
+var CryptoInstance = New()
 
-func NewCryptoInstance() *CryptoType {
+func New() *CryptoType {
 	return &CryptoType{}
 }
 

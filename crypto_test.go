@@ -1,9 +1,10 @@
 package go_crypto
 
 import (
-	go_test_ "github.com/pefish/go-test"
 	"strings"
 	"testing"
+
+	go_test_ "github.com/pefish/go-test"
 )
 
 func TestCryptoClass_Sha256ToHex(t *testing.T) {
