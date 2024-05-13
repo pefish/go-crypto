@@ -184,20 +184,16 @@ func (ct *CryptoType) AesCbcDecrypt(key string, data string) (string, error) {
 	return string(origData), nil
 }
 
-func (ct *CryptoType) MustGeneRsaKeyPair(params ...int) (priv string, pub string) {
-	result1, result2, err := ct.GeneRsaKeyPair(params...)
+func (ct *CryptoType) MustGeneRsaKeyPair() (priv string, pub string) {
+	result1, result2, err := ct.GeneRsaKeyPair()
 	if err != nil {
 		panic(err)
 	}
 	return result1, result2
 }
 
-func (ct *CryptoType) GeneRsaKeyPair(params ...int) (priv string, pub string, err error) {
-	bits := 2048
-	if len(params) > 0 {
-		bits = params[0]
-	}
-	privateKey, err := rsa.GenerateKey(rand.Reader, bits)
+func (ct *CryptoType) GeneRsaKeyPair() (priv string, pub string, err error) {
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	derStream := x509.MarshalPKCS1PrivateKey(privateKey)
 	block := &pem.Block{
 		Type:  "RSA PRIVATE KEY",
